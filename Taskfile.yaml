@@ -22,6 +22,13 @@ tasks:
     desc: Run app
     deps: [build]
     cmds:
+      - |
+        export REDIS_SERVER=redis-pve.labul.sva.de
+        export REDIS_PORT=6379
+        export REDIS_STREAM=sweatShop:analyze
+        echo "Enter REDIS PASSWORD:"
+        read REDIS_PASSWORD;
+        export REDIS_PASSWORD=${REDIS_PASSWORD}
       - "{{ .PROJECT_NAME }}"
 
   lint:
@@ -69,3 +76,15 @@ tasks:
       - git push
       - git tag -a v0.1.1 -m 'initialized go module {{ .Module }} on {{ .DATE }}'
       - git push origin --tags
+
+  run-test:
+    desc: Run test-producer
+    cmds:
+      - |
+        export REDIS_SERVER=redis-pve.labul.sva.de
+        export REDIS_PORT=6379
+        export REDIS_STREAM=sweatShop:analyze
+        echo "Enter REDIS PASSWORD:"
+        read REDIS_PASSWORD;
+        export REDIS_PASSWORD=${REDIS_PASSWORD}
+        go run ./tests/test-producer.go

@@ -24,7 +24,6 @@ var (
 	templatePath  = os.Getenv("TEMPLATE_PATH")
 	log           = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
 	logfilePath   = "/tmp/sweatShop-analyze.log"
-	namespace     = "default" // just a default value
 )
 
 func PollRedisStreams() {
@@ -75,6 +74,7 @@ func processStreams(msg *redisqueue.Message) error {
 		"",
 		"",
 		false}
+
 	analyzer.GetMatchingFiles(repo)
 
 	return nil
