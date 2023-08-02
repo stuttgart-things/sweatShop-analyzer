@@ -1,3 +1,7 @@
+/*
+Copyright © 2023 XIAOMIN LAI
+*/
+
 package analyzer
 
 import (
