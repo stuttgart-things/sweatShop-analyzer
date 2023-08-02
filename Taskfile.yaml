@@ -1,0 +1,25 @@
+version: 3
+vars:
+  PROJECT_NAME:
+    sh: pwd | grep -o "[^/]*$"
+  REPOSITORY_NAME: stuttgart-things
+  MODULE: github.com/{{ .REPOSITORY_NAME }}/{{ .PROJECT_NAME }}
+  GIT_COMMIT:
+    sh: git log -n 1 --format=%h
+  DATE:
+    sh: date +"%y.%m%d.%H%M"
+
+tasks:
+  project-init-go:
+    desc: Bootstrap project
+    cmds:
+      - go install github.com/goreleaser/goreleaser@latest
+      - go mod init {{ .Module }}
+      - go mod tidy
+      - goreleaser init
+      - git add *
+      - git add .goreleaser.yaml
+      - git commit -am 'initialized go module {{ .Module }} on {{ .DATE }}'
+      - git push
+      - git tag -a v0.1.1 -m 'initialized go module {{ .Module }} on {{ .DATE }}'
+      - git push origin --tags
