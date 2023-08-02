@@ -2,9 +2,9 @@
 
 ## DEV
 
-```
-task run
-task run-test
+```bash
+task run #run analyze
+task run-test #run producer
 ```
 
 ## LICENSE
@@ -27,8 +27,12 @@ limitations under the License.
 
 </details>
 
+
 Author Information
 ------------------
+
+```bash
 08/2023
 Xiaomin Lai, stuttgart-things
 Patrick Hermann, stuttgart-things
+```
