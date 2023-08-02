@@ -10,6 +10,53 @@ vars:
     sh: date +"%y.%m%d.%H%M"
 
 tasks:
+# DEFAULT
+  build:
+    desc: Build the app
+    deps: [lint, test]
+    cmds:
+      - go install -ldflags="-X {{ .MODULE }}/internal.date={{ .DATE }} -X {{ .MODULE }}/internal.version={{ .UPDATED_TAG_VERSION }} -X {{ .MODULE }}/internal.commit={{ .GIT_COMMIT }}"
+      - "{{ .PROJECT_NAME }}"
+
+  run:
+    desc: Run app
+    deps: [build]
+    cmds:
+      - "{{ .PROJECT_NAME }}"
+
+  lint:
+    desc: Lint code
+    cmds:
+      - cmd: golangci-lint run
+        ignore_error: true
+
+  test:
+    desc: Test code
+    cmds:
+      - go mod tidy
+      - go test ./... -v
+
+  tag:
+    desc: Commit, push & tag the module
+    deps: [lint, test]
+    cmds:
+      - task: git-push
+      - rm -rf dist
+      - go mod tidy
+      - git pull --tags
+      - git tag -a {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }} -m 'updated for stuttgart-things {{ .DATE }} for tag version {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }}'
+      - git push origin --tags
+
+  git-push:
+    desc: Commit & push the module
+    cmds:
+      - go mod tidy
+      - git pull
+      - git config advice.addIgnoredFile false
+      - git add *
+      - git commit -am 'updated {{ .PROJECT_NAME }} {{ .DATE }} for tag version {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }}'
+      - git push
+
   project-init-go:
     desc: Bootstrap project
     cmds:
