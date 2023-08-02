@@ -53,7 +53,7 @@ func PollRedisStreams() {
 		}
 	}()
 
-	log.Info("START POLLING STREAM", redisStream+" on "+redisServer+":"+redisPort)
+	log.Info("START POLLING STREAM ", redisStream+" on "+redisServer+":"+redisPort)
 
 	c.Run()
 
@@ -65,15 +65,16 @@ func processStreams(msg *redisqueue.Message) error {
 
 	log.Info("templatePath: ", templatePath)
 
-	fmt.Println(msg.Values)
+	// ADD VALUE VALIDATION HERE
 
 	repo := analyzer.Repository{
-		"stuttgart-things",
-		"https://github.com/stuttgart-things/stuttgart-things.git",
-		"main",
-		"",
-		"",
-		false}
+		msg.Values["name"].(string),
+		msg.Values["url"].(string),
+		msg.Values["revision"].(string),
+		msg.Values["username"].(string),
+		msg.Values["password"].(string),
+		sthingsBase.ConvertStringToBoolean(msg.Values["insecure"].(string)),
+	}
 
 	analyzer.GetMatchingFiles(repo)
 

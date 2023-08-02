@@ -8,7 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stuttgart-things/redisqueue v0.0.0-20230628084515-1d31f7874df7
-	github.com/stuttgart-things/sthingsBase v0.1.15
+	github.com/stuttgart-things/sthingsBase v0.1.16
 	go.hein.dev/go-version v0.1.0
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 	gopkg.in/yaml.v2 v2.4.0

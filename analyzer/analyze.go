@@ -60,6 +60,9 @@ func GetMatchingFiles(repo Repository) {
 		log.Errorf("could not get current commit id: %w", err)
 	}
 
-	fmt.Println(currentCommitID)
+	log.Println(currentCommitID)
+
+	// OUTPUT RESULT DATA TO STDOUT FOR NOW
+	// WE MIGHT END UP USING REDIS JSON AS A OUTPUT FOMRAT AND ONLY STORE RESULT-IDS IN REDIS STREAMS
 
 }
