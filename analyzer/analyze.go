@@ -50,4 +50,12 @@ func GetMatchingFiles(repo Repository) {
 		}
 	}
 
+	// get current commit id for later comparison
+	currentCommitID, err := gitRepo.Head()
+	if err != nil {
+		log.Errorf("could not get current commit id: %w", err)
+	}
+
+	fmt.Println(currentCommitID)
+
 }
