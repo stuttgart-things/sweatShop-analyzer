@@ -52,7 +52,11 @@ func PollRedisStreams() {
 		}
 	}()
 
-	log.Info("START POLLING STREAM ", redisStream+" on "+redisServer+":"+redisPort)
+	if redisStream == "" {
+		log.Error("NO STREAM DEFINED - VARIABLE REDIS_STREAM SEEMS TO BE EMPTY")
+	}
+
+	log.Info("START POLLING STREAM ", redisStream+" ON "+redisServer+":"+redisPort)
 
 	c.Run()
 

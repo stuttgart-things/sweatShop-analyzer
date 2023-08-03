@@ -8,6 +8,9 @@ vars:
     sh: git log -n 1 --format=%h
   DATE:
     sh: date +"%y.%m%d.%H%M"
+  REDIS_DEV_SERVER: redis-pve.labul.sva.de
+  REDIS_DEV_PORT: 6379
+  REDIS_DEV_STREAM: "sweatShop:analyze"
 
 tasks:
 
@@ -16,19 +19,19 @@ tasks:
     deps: [lint, test]
     cmds:
       - go install -ldflags="-X {{ .MODULE }}/internal.date={{ .DATE }} -X {{ .MODULE }}/internal.version={{ .UPDATED_TAG_VERSION }} -X {{ .MODULE }}/internal.commit={{ .GIT_COMMIT }}"
-      - "{{ .PROJECT_NAME }}"
 
   run:
     desc: Run app
     cmds:
+      - task: build
       - |
-        export REDIS_SERVER=redis-pve.labul.sva.de
-        export REDIS_PORT=6379
-        export REDIS_STREAM=sweatShop:analyze
+        export REDIS_SERVER={{ .REDIS_DEV_SERVER }}
+        export REDIS_PORT={{ .REDIS_DEV_PORT }}
+        export REDIS_STREAM={{ .REDIS_DEV_STREAM }}
         echo "Enter REDIS PASSWORD:"
         read REDIS_PASSWORD;
         export REDIS_PASSWORD=${REDIS_PASSWORD}
-      - go run main.go
+        {{ .PROJECT_NAME }}
 
   lint:
     desc: Lint code
@@ -80,9 +83,9 @@ tasks:
     desc: Run test-producer
     cmds:
       - |
-        export REDIS_SERVER=redis-pve.labul.sva.de
-        export REDIS_PORT=6379
-        export REDIS_STREAM=sweatShop:analyze
+        export REDIS_SERVER={{ .REDIS_DEV_SERVER }}
+        export REDIS_PORT={{ .REDIS_DEV_PORT }}
+        export REDIS_STREAM={{ .REDIS_DEV_STREAM }}
         echo "Enter REDIS PASSWORD:"
         read REDIS_PASSWORD;
         export REDIS_PASSWORD=${REDIS_PASSWORD}
