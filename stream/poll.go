@@ -21,7 +21,6 @@ var (
 	redisPort     = os.Getenv("REDIS_PORT")
 	redisPassword = os.Getenv("REDIS_PASSWORD")
 	redisStream   = os.Getenv("REDIS_STREAM")
-	templatePath  = os.Getenv("TEMPLATE_PATH")
 	log           = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
 	logfilePath   = "/tmp/sweatShop-analyzer.log"
 )
@@ -62,8 +61,6 @@ func PollRedisStreams() {
 }
 
 func processStreams(msg *redisqueue.Message) error {
-
-	log.Info("templatePath: ", templatePath)
 
 	// ADD VALUE VALIDATION HERE
 

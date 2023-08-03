@@ -45,7 +45,7 @@ func GetMatchingFiles(repo Repository) {
 	}
 
 	if len(patternFile) == 0 {
-		log.Infof("No pattern file found in git repo. Use default pattern file from yacht-analyze repo.")
+		log.Infof("No pattern file found in git repo. Use default pattern file from sweatShop-analyzer repo.")
 		gitRoot, _ := findGitRoot()
 
 		err := getTechsAndPatternsFromFile(filepath.Join(gitRoot, PATTERNFILENAME))

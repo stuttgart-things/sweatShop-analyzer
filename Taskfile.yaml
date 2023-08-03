@@ -10,7 +10,7 @@ vars:
     sh: date +"%y.%m%d.%H%M"
 
 tasks:
-# DEFAULT
+
   build:
     desc: Build the app
     deps: [lint, test]
@@ -20,7 +20,6 @@ tasks:
 
   run:
     desc: Run app
-    deps: [build]
     cmds:
       - |
         export REDIS_SERVER=redis-pve.labul.sva.de
@@ -29,7 +28,7 @@ tasks:
         echo "Enter REDIS PASSWORD:"
         read REDIS_PASSWORD;
         export REDIS_PASSWORD=${REDIS_PASSWORD}
-      - "{{ .PROJECT_NAME }}"
+      - go run main.go
 
   lint:
     desc: Lint code

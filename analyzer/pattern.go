@@ -10,7 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-const PATTERNFILENAME = "yacht-analyze.yaml"
+const PATTERNFILENAME = "sweatShop-analyzer.yaml"
 
 var techsAndPatterns = make(map[string][]string)
 
