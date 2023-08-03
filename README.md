@@ -1,4 +1,4 @@
-# stuttgart-things/sweatShop-analyze
+# stuttgart-things/sweatShop-analyzer
 
 ## DEV
 

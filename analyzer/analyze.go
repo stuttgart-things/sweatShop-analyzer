@@ -22,11 +22,11 @@ type Repository struct {
 
 var (
 	log         = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
-	logfilePath = "/tmp/sweatShop-analyze.log"
+	logfilePath = "/tmp/sweatShop-analyzer.log"
 )
 
 func GetMatchingFiles(repo Repository) {
-	log.Println("sweatShop-analyze started")
+	log.Println("sweatShop-analyzer started")
 	log.Println("GetMatchingFiles for repo:", repo)
 
 	// Clone the repo into memory for later use

@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/stuttgart-things/sweatShop-analyze/analyzer"
+	"github.com/stuttgart-things/sweatShop-analyzer/analyzer"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/stuttgart-things/redisqueue"
@@ -23,7 +23,7 @@ var (
 	redisStream   = os.Getenv("REDIS_STREAM")
 	templatePath  = os.Getenv("TEMPLATE_PATH")
 	log           = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
-	logfilePath   = "/tmp/sweatShop-analyze.log"
+	logfilePath   = "/tmp/sweatShop-analyzer.log"
 )
 
 func PollRedisStreams() {

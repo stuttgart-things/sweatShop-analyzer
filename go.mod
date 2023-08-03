@@ -1,4 +1,4 @@
-module github.com/stuttgart-things/sweatShop-analyze
+module github.com/stuttgart-things/sweatShop-analyzer
 
 go 1.20
 
