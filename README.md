@@ -1,5 +1,7 @@
 # stuttgart-things/sweatShop-analyzer
 
+git repository analytics service w/ input from redis streams.
+
 ## DEV
 
 ```bash
