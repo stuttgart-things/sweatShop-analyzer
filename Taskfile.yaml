@@ -11,15 +11,19 @@ vars:
   REDIS_DEV_SERVER: redis-pve.labul.sva.de
   REDIS_DEV_PORT: 6379
   REDIS_DEV_STREAM: "sweatShop:analyze"
+  UPDATED_TAG:
+    sh: old_tag=$(git describe --tags --abbrev=0 | cut -d "." -f3 | cut -d "-" -f1); new_tag=$((old_tag+1)); echo $new_tag
+  UPDATED_TAG_VERSION:
+    sh: t1=$(git describe --tags --abbrev=0 | cut -f1 -d'.'); t2=$(git describe --tags --abbrev=0 | cut -f2 -d'.'); echo $t1.$t2.{{ .UPDATED_TAG }}
+  BRANCH:
+    sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo -$(git rev-parse --abbrev-ref HEAD) ; fi
 
 tasks:
-
   build:
     desc: Build the app
     deps: [lint, test]
     cmds:
       - go install -ldflags="-X {{ .MODULE }}/internal.date={{ .DATE }} -X {{ .MODULE }}/internal.version={{ .UPDATED_TAG_VERSION }} -X {{ .MODULE }}/internal.commit={{ .GIT_COMMIT }}"
-
   run:
     desc: Run app
     cmds:
@@ -32,19 +36,16 @@ tasks:
         read REDIS_PASSWORD;
         export REDIS_PASSWORD=${REDIS_PASSWORD}
         {{ .PROJECT_NAME }}
-
   lint:
     desc: Lint code
     cmds:
       - cmd: golangci-lint run
         ignore_error: true
-
   test:
     desc: Test code
     cmds:
       - go mod tidy
       - go test ./... -v
-
   tag:
     desc: Commit, push & tag the module
     deps: [lint, test]
@@ -55,7 +56,6 @@ tasks:
       - git pull --tags
       - git tag -a {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }} -m 'updated for stuttgart-things {{ .DATE }} for tag version {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }}'
       - git push origin --tags
-
   git-push:
     desc: Commit & push the module
     cmds:
@@ -65,7 +65,6 @@ tasks:
       - git add *
       - git commit -am 'updated {{ .PROJECT_NAME }} {{ .DATE }} for tag version {{ .UPDATED_TAG_VERSION }}{{ .BRANCH }}'
       - git push
-
   project-init-go:
     desc: Bootstrap project
     cmds:
@@ -78,7 +77,6 @@ tasks:
       - git push
       - git tag -a v0.1.1 -m 'initialized go module {{ .Module }} on {{ .DATE }}'
       - git push origin --tags
-
   run-test:
     desc: Run test-producer
     cmds:
