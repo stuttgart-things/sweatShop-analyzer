@@ -17,6 +17,8 @@ vars:
     sh: t1=$(git describe --tags --abbrev=0 | cut -f1 -d'.'); t2=$(git describe --tags --abbrev=0 | cut -f2 -d'.'); echo $t1.$t2.{{ .UPDATED_TAG }}
   BRANCH:
     sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo -$(git rev-parse --abbrev-ref HEAD) ; fi
+  REGISTRY: eu.gcr.io
+  REPOSITORY_NAME: stuttgart-things
 
 tasks:
   build:
@@ -24,6 +26,16 @@ tasks:
     deps: [lint, test]
     cmds:
       - go install -ldflags="-X {{ .MODULE }}/internal.date={{ .DATE }} -X {{ .MODULE }}/internal.version={{ .UPDATED_TAG_VERSION }} -X {{ .MODULE }}/internal.commit={{ .GIT_COMMIT }}"
+
+  build-image:
+    desc: Build image
+    deps: [tag]
+    cmds:
+      - "{{ .CONTAINER_RUNTIME_CMD }} build -t {{ .REGISTRY }}/{{ .REPOSITORY_NAME }}/{{ lower (.PROJECT_NAME) }}:{{ .DATE }}-{{ .UPDATED_TAG_VERSION }}{{ .BRANCH }} --build-arg VERSION={{ .UPDATED_TAG_VERSION }} --build-arg BUILD_DATE={{ .DATE }} --build-arg COMMIT={{ .GIT_COMMIT }} ."
+      - "{{ .CONTAINER_RUNTIME_CMD }} push {{ .REGISTRY }}/{{ .REPOSITORY_NAME }}/{{ lower (.PROJECT_NAME) }}:{{ .DATE }}-{{ .UPDATED_TAG_VERSION }}{{ .BRANCH }}"
+    vars:
+      CONTAINER_RUNTIME_CMD: sudo nerdctl
+
   run:
     desc: Run app
     cmds:
