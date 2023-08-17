@@ -19,12 +19,13 @@ var (
 	}
 
 	ValuesRepo = map[string]interface{}{
-		"name":     "stuttgart-things",
-		"url":      "https://github.com/stuttgart-things/stuttgart-things.git",
-		"revision": "main",
-		"username": "",
-		"password": "",
-		"insecure": "false",
+		"name":                    "stuttgart-things",
+		"url":                     "https://github.com/stuttgart-things/stuttgart-things.git",
+		"revision":                "main",
+		"username":                "",
+		"password":                "",
+		"insecure":                "false",
+		"force_complete_analysis": "false",
 	}
 )
 

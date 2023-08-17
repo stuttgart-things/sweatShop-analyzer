@@ -17,7 +17,7 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
-func gitCloneRevision(repo Repository) (*git.Repository, error) {
+func gitCloneRevision(repo *Repository) (*git.Repository, error) {
 
 	// Create credentials
 	creds := &http.BasicAuth{

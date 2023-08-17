@@ -6,6 +6,7 @@ package stream
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -67,17 +68,66 @@ func PollRedisStreams() {
 func processStreams(msg *redisqueue.Message) error {
 
 	// ADD VALUE VALIDATION HERE
-
-	repo := analyzer.Repository{
-		msg.Values["name"].(string),
-		msg.Values["url"].(string),
-		msg.Values["revision"].(string),
-		msg.Values["username"].(string),
-		msg.Values["password"].(string),
-		sthingsBase.ConvertStringToBoolean(msg.Values["insecure"].(string)),
+	repo := buildValidRepository(msg.Values)
+	if repo == nil {
+		log.Error("INVALID INPUT RECEIVED")
+		return nil
 	}
 
-	analyzer.GetMatchingFiles(repo)
+	repo.GetMatchingFiles()
 
 	return nil
+}
+
+func buildValidRepository(values map[string]interface{}) *analyzer.Repository {
+
+	if len(values) == 0 {
+		log.Error("NO VALUES RECEIVED")
+		return nil
+	}
+
+	if values["url"] == nil {
+		log.Error("NO URL RECEIVED")
+		return nil
+	}
+
+	_, err := url.ParseRequestURI(values["url"].(string))
+	if err != nil {
+		log.Errorf("INVALID URL RECEIVED: %s", values["url"].(string))
+		return nil
+	}
+
+	if values["revision"] == nil {
+		log.Error("NO REVISION RECEIVED")
+		return nil
+	}
+
+	// try to construct repository using the received values
+	r := &analyzer.Repository{
+		Url:      values["url"].(string),
+		Revision: values["revision"].(string),
+	}
+	if values["name"] != nil {
+		r.Name = values["name"].(string)
+	}
+	if values["username"] != nil {
+		r.Username = values["username"].(string)
+	}
+	if values["password"] != nil {
+		r.Password = values["password"].(string)
+	}
+	if values["insecure"] != nil {
+		r.Insecure = sthingsBase.ConvertStringToBoolean(values["insecure"].(string))
+	}
+
+	// try to connect to the repository
+	err = r.ConnectRepository()
+	if err != nil {
+		log.Errorf("COULD NOT CONNECT TO REPOSITORY: %s", err.Error())
+		return nil
+	}
+
+	// TODO: check if the revision exists
+
+	return r
 }
