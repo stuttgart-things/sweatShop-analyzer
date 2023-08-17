@@ -11,7 +11,7 @@ import (
 	"github.com/stuttgart-things/sweatShop-analyzer/analyzer"
 )
 
-var testCases_isValidAnalyzerInput = []struct {
+var testCases_buildValidRepository = []struct {
 	Values   map[string]interface{}
 	Expected *analyzer.Repository
 }{
@@ -58,12 +58,12 @@ var testCases_isValidAnalyzerInput = []struct {
 	},
 }
 
-func Test_isValidAnalyzerInput(t *testing.T) {
+func Test_buildValidRepository(t *testing.T) {
 
-	for _, tc := range testCases_isValidAnalyzerInput {
+	for _, tc := range testCases_buildValidRepository {
 		actual := buildValidRepository(tc.Values)
 		if reflect.DeepEqual(actual, tc.Expected) != true {
-			t.Errorf("isValidAnalyzerInput(%v): expected %v, actual %v", tc.Values, tc.Expected, actual)
+			t.Errorf("buildValidRepository(%+v): expected %+v, actual %+v", tc.Values, tc.Expected, actual)
 		}
 	}
 }
