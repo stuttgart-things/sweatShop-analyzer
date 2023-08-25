@@ -15,14 +15,6 @@ import (
 
 var ErrCacheMiss = errors.New("cache: key is missing")
 
-// TechAndPath is a map with technology and a path
-type TechAndPath struct {
-	// name of the technology
-	Technology string
-	// path, that matches to the pattern of the technology
-	Path string
-}
-
 type MatchingFilesValue struct {
 	CommitID string
 	Results  []*TechAndPath

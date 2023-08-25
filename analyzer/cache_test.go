@@ -36,4 +36,6 @@ func TestCache_GetRevisionMetadata(t *testing.T) {
 		CommitID: "my-commit-id",
 		Results:  res,
 	}, value)
+	// cleanup
+	cache.SetItem(matchingFilesKey("my-repo-url"), nil, cache.expiration, true)
 }

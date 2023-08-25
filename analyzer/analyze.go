@@ -29,6 +29,14 @@ type Repository struct {
 	ForceCompleteAnalysis *bool
 }
 
+// TechAndPath is a map with technology and a path
+type TechAndPath struct {
+	// name of the technology
+	Technology string
+	// path, that matches to the pattern of the technology
+	Path string
+}
+
 var (
 	redisServer = os.Getenv("REDIS_SERVER")
 	log         = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
@@ -147,7 +155,19 @@ func (repo *Repository) GetMatchingFiles() {
 
 	// OUTPUT RESULT DATA TO STDOUT FOR NOW
 	// WE MIGHT END UP USING REDIS JSON AS A OUTPUT FOMRAT AND ONLY STORE RESULT-IDS IN REDIS STREAMS
-	fmt.Println(res)
+
+	// Create a new analyzer redis json handler
+	// go-rejson/v4@v4.1.0 does not support redis/go-redis/v9 (but redis/go-redis/v8)
+	// have to create a new client for go-redis/v8 here
+	// use redigo conn for simplicity
+	analyzerHandler := NewAnalyzerJSONHandlerWithRedigoConn(redisServer)
+	defer (*analyzerHandler.conn).Close()
+
+	// Set the results in redis json
+	err = analyzerHandler.SetAnalyzerResult(repo, currentCommitID.Hash().String(), res)
+	if err != nil {
+		log.Errorf("could not set results in redis json: %v", err)
+	}
 
 }
 
