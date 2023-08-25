@@ -1,16 +1,17 @@
 package analyzer
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	goredis "github.com/go-redis/redis/v8"
 	redigoredis "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/v4"
+	goredis "github.com/redis/go-redis/v9"
 )
 
-// ErrJSONMissWithGoRedisClient has ideally the type RedisError of "github.com/go-redis/redis/v8/internal/proto"
+// ErrJSONMissWithGoRedisClient has ideally the type RedisError of "github.com/redis/go-redis/v9/internal/proto"
 var ErrJSONMissWithGoRedisClient = "redis: nil"
 var ErrJSONMissWithRedigoConn = errors.New("redigo: nil returned")
 
@@ -31,7 +32,7 @@ func NewAnalyzerJSONHandlerWithGoRedisClient(client *goredis.Client) *AnalyzerJS
 
 	// Create a new ReJSON instance
 	rh := rejson.NewReJSONHandler()
-	rh.SetGoRedisClient(client)
+	rh.SetGoRedisClientWithContext(context.Background(), client)
 
 	return &AnalyzerJSONHandler{
 		client:  client,
