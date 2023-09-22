@@ -8,7 +8,7 @@ vars:
     sh: git log -n 1 --format=%h
   DATE:
     sh: date +"%y.%m%d.%H%M"
-  REDIS_DEV_SERVER: redis-pve.labul.sva.de
+  REDIS_DEV_SERVER: localhost # redis-pve.labul.sva.de
   REDIS_DEV_PORT: 6379
   REDIS_DEV_STREAM: "sweatShop:analyze"
   UPDATED_TAG:

@@ -3,15 +3,25 @@ package analyzer
 import (
 	"testing"
 
-	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+
+	redisutil "github.com/stuttgart-things/sweatShop-analyzer/utils/redis"
 )
+
+func initRedisUtilForTesting() *redisutil.Redis {
+	r := redisutil.NewRedisWithClient(
+		"localhost",
+		6379,
+		"Atlan7is",
+	)
+	r.SetJSONHandler()
+	return r
+}
 
 func Test_AnalyzerResultValueWithGoRedisClient(t *testing.T) {
 
-	h := NewAnalyzerJSONHandlerWithGoRedisClient(
-		goredis.NewClient(&goredis.Options{Addr: redisServer}),
-	)
+	redisUtil := initRedisUtilForTesting()
+	h := newAnalyzerJSONHandler(redisUtil.JSONHandler)
 
 	// json miss
 	_, err := h.GetAnalyzerResult("my-repo-url")
@@ -27,9 +37,11 @@ func Test_AnalyzerResultValueWithGoRedisClient(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, testValue, value)
 	// cleanup
-	h.SetItem(analyzerResultKey(testValue.Repo.Url), nil, true)
+	err = h.SetItem(analyzerResultKey(testValue.Repo.Url), nil, true)
+	assert.NoError(t, err)
 }
 
+/*
 func Test_AnalyzerResultValueWithRedigoConn(t *testing.T) {
 
 	h := NewAnalyzerJSONHandlerWithRedigoConn("localhost:6379")
@@ -48,8 +60,10 @@ func Test_AnalyzerResultValueWithRedigoConn(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, testValue, value)
 	// cleanup
-	h.SetItem(analyzerResultKey(testValue.Repo.Url), nil, true)
+	err = h.SetItem(analyzerResultKey(testValue.Repo.Url), nil, true)
+	assert.NoError(t, err)
 }
+*/
 
 var testValue = &AnalyzerResultValue{
 	Repo: &Repository{

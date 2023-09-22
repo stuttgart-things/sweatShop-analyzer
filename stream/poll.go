@@ -8,23 +8,44 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/stuttgart-things/sweatShop-analyzer/analyzer"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/stuttgart-things/redisqueue"
 	sthingsBase "github.com/stuttgart-things/sthingsBase"
+	redisutil "github.com/stuttgart-things/sweatShop-analyzer/utils/redis"
+)
+
+const (
+	streamName = "sweatShop:analyze"
 )
 
 var (
-	redisServer   = os.Getenv("REDIS_SERVER")
-	redisPort     = os.Getenv("REDIS_PORT")
-	redisPassword = os.Getenv("REDIS_PASSWORD")
-	redisStream   = os.Getenv("REDIS_STREAM")
-	log           = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
-	logfilePath   = "/tmp/sweatShop-analyzer.log"
+	log         = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
+	logfilePath = "/tmp/sweatShop-analyzer.log"
 )
+
+var redisUtil *redisutil.Redis
+
+func init() {
+	// Get redis port from environment variable and convert it to int
+	redisport, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
+	if err != nil {
+		log.Errorf("COULD NOT CONVERT REDIS PORT INTO INT: %s", os.Getenv("REDIS_PORT"))
+	}
+
+	// Create a global redisUtil object
+	redisUtil = redisutil.NewRedisWithClient(
+		os.Getenv("REDIS_SERVER"),
+		redisport,
+		os.Getenv("REDIS_PASSWORD"),
+	)
+
+	// Create a new JSON handler
+	redisUtil.SetJSONHandler()
+}
 
 func PollRedisStreams() {
 
@@ -34,18 +55,14 @@ func PollRedisStreams() {
 		ReclaimInterval:   1 * time.Second,
 		BufferSize:        100,
 		Concurrency:       10,
-		RedisClient: redis.NewClient(&redis.Options{
-			Addr:     redisServer + ":" + redisPort,
-			Password: redisPassword,
-			DB:       0,
-		}),
+		RedisClient:       redisUtil.Client,
 	})
 
 	if err != nil {
 		panic(err)
 	}
 
-	c.Register(redisStream, processStreams)
+	c.Register(streamName, processStreams)
 
 	go func() {
 		for err := range c.Errors {
@@ -53,11 +70,7 @@ func PollRedisStreams() {
 		}
 	}()
 
-	if redisStream == "" {
-		log.Error("NO STREAM DEFINED - VARIABLE REDIS_STREAM SEEMS TO BE EMPTY")
-	}
-
-	log.Info("START POLLING STREAM ", redisStream+" ON "+redisServer+":"+redisPort)
+	log.Info("START POLLING STREAM ", streamName+" ON "+redisUtil.GetServerPort())
 
 	c.Run()
 
@@ -74,9 +87,7 @@ func processStreams(msg *redisqueue.Message) error {
 		return nil
 	}
 
-	repo.GetMatchingFiles()
-
-	return nil
+	return repo.GetMatchingFiles(redisUtil)
 }
 
 func buildValidRepository(values map[string]interface{}) *analyzer.Repository {

@@ -1,14 +1,11 @@
 package analyzer
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	redigoredis "github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson/v4"
-	goredis "github.com/redis/go-redis/v9"
 )
 
 // ErrJSONMissWithGoRedisClient has ideally the type RedisError of "github.com/redis/go-redis/v9/internal/proto"
@@ -22,27 +19,22 @@ type AnalyzerResultValue struct {
 }
 
 type AnalyzerJSONHandler struct {
-	client  *goredis.Client
-	conn    *redigoredis.Conn
 	handler *rejson.Handler
 }
 
 // attention: go-rejson/v4@v4.1.0 does not support redis/go-redis/v9 (but redis/go-redis/v8)
-func NewAnalyzerJSONHandlerWithGoRedisClient(client *goredis.Client) *AnalyzerJSONHandler {
-
-	// Create a new ReJSON instance
-	rh := rejson.NewReJSONHandler()
-	rh.SetGoRedisClientWithContext(context.Background(), client)
-
+// go-rejson/master does support redis/go-redis/v9
+func newAnalyzerJSONHandler(rh *rejson.Handler) *AnalyzerJSONHandler {
 	return &AnalyzerJSONHandler{
-		client:  client,
 		handler: rh,
 	}
 }
 
+/*
 func NewAnalyzerJSONHandlerWithRedigoConn(rs string) *AnalyzerJSONHandler {
 
 	// Connect to Redis server
+	// TODO: add authentication
 	conn, err := redigoredis.Dial("tcp", rs)
 	if err != nil {
 		log.Fatalf("Could not connect to Redis server: %v\n", err)
@@ -57,7 +49,7 @@ func NewAnalyzerJSONHandlerWithRedigoConn(rs string) *AnalyzerJSONHandler {
 		conn:    &conn,
 		handler: rh,
 	}
-}
+}*/
 
 func analyzerResultKey(repoURL string) string {
 	return fmt.Sprintf("analyzerresult|%s", repoURL)
@@ -100,12 +92,12 @@ func (h *AnalyzerJSONHandler) GetItem(key string, item interface{}) error {
 		return fmt.Errorf("cannot get item into a nil for key %s", key)
 	}
 
-	itemByte, err := redigoredis.Bytes(h.handler.JSONGet(key, "."))
+	res, err := h.handler.JSONGet(key, ".")
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(itemByte, item)
+	err = json.Unmarshal(res.([]byte), item)
 	if err != nil {
 		return fmt.Errorf("failed to JSON Unmarshal: %v", err)
 	}

@@ -2,6 +2,9 @@ package analyzer
 
 import (
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testGetMatchingFilesCases = []struct {
@@ -60,20 +63,29 @@ var testGetMatchingFilesCases = []struct {
 
 func TestGetMatchingFiles(t *testing.T) {
 
+	redisUtil := initRedisUtilForTesting()
+	redisUtil.SetJSONHandler()
+	cache := newAnalyzerCache(redisUtil.Client, 30)
+	h := newAnalyzerJSONHandler(redisUtil.JSONHandler)
+
+	// run initial analysis
 	for _, tc := range testGetMatchingFilesCases {
+		err := tc.Repo.GetMatchingFiles(redisUtil)
+		assert.Nil(t, err)
+	}
 
-		tc.Repo.GetMatchingFiles()
+	// use cached results
+	for _, tc := range testGetMatchingFilesCases {
+		err := tc.Repo.GetMatchingFiles(redisUtil)
+		assert.Nil(t, err)
+	}
 
-		/*
-			res, err := GetMatchingFiles(tc.Repo)
-			log.Printf("GetMatchingFiles output: %+v", res)
+	// cleanup
+	for _, tc := range testGetMatchingFilesCases {
+		err := cache.SetItem(matchingFilesKey(tc.Repo.Url), nil, time.Second, true)
+		assert.Nil(t, err)
 
-
-			assert.Nil(t, err)
-			assert.Equal(t, len(tc.Expected.Results), len(res.Results))
-			assert.Equal(t, tc.Expected.Results[0].Technology, res.Results[0].Technology)
-			assert.Equal(t, tc.Expected.Results[0].Path, res.Results[0].Path)
-			assert.NotContains(t, res.Results, "ansible")
-		*/
+		err = h.SetItem(analyzerResultKey(tc.Repo.Url), nil, true)
+		assert.Nil(t, err)
 	}
 }

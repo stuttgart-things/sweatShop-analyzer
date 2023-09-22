@@ -4,19 +4,15 @@ import (
 	"testing"
 	"time"
 
-	goredis "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
-func newAnalyzerCacheForTesting() *AnalyzerCache {
-	return NewAnalyzerCache(
-		goredis.NewClient(&goredis.Options{Addr: redisServer}),
+func TestCache_GetRevisionMetadata(t *testing.T) {
+
+	redisUtil := initRedisUtilForTesting()
+	cache := newAnalyzerCache(redisUtil.Client,
 		15*time.Second, // when testing in debug mode, this may time out. Increase if needed.
 	)
-}
-
-func TestCache_GetRevisionMetadata(t *testing.T) {
-	cache := newAnalyzerCacheForTesting()
 
 	// cache miss
 	_, err := cache.GetMatchingFiles("my-repo-url")
@@ -37,5 +33,6 @@ func TestCache_GetRevisionMetadata(t *testing.T) {
 		Results:  res,
 	}, value)
 	// cleanup
-	cache.SetItem(matchingFilesKey("my-repo-url"), nil, cache.expiration, true)
+	err = cache.SetItem(matchingFilesKey("my-repo-url"), nil, cache.expiration, true)
+	assert.NoError(t, err)
 }

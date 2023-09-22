@@ -6,15 +6,15 @@ package analyzer
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
+
+	redisutil "github.com/stuttgart-things/sweatShop-analyzer/utils/redis"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	memory "github.com/go-git/go-git/v5/storage/memory"
-	goredis "github.com/redis/go-redis/v9"
 
 	sthingsBase "github.com/stuttgart-things/sthingsBase"
 )
@@ -38,7 +38,6 @@ type TechAndPath struct {
 }
 
 var (
-	redisServer = os.Getenv("REDIS_SERVER")
 	log         = sthingsBase.StdOutFileLogger(logfilePath, "2006-01-02 15:04:05", 50, 3, 28)
 	logfilePath = "/tmp/sweatShop-analyzer.log"
 )
@@ -65,7 +64,7 @@ func (repo *Repository) ConnectRepository() error {
 	return nil
 }
 
-func (repo *Repository) GetMatchingFiles() {
+func (repo *Repository) GetMatchingFiles(redisUtil *redisutil.Redis) error {
 	log.Println("sweatShop-analyzer started")
 	log.Println("GetMatchingFiles for repo:", repo)
 
@@ -82,6 +81,7 @@ func (repo *Repository) GetMatchingFiles() {
 	patternFile, err := getFileList(gitRepo, PATTERNFILENAME)
 	if err != nil {
 		log.Errorf("could not get pattern file: %v", err)
+		return err
 	}
 
 	if len(patternFile) == 0 {
@@ -98,15 +98,13 @@ func (repo *Repository) GetMatchingFiles() {
 	currentCommitID, err := gitRepo.Head()
 	if err != nil {
 		log.Errorf("could not get current commit id: %v", err)
+		return err
 	}
 
 	log.Println(currentCommitID)
 
 	// Create a new analyzer cache client
-	analyzerCacheClient := NewAnalyzerCache(
-		goredis.NewClient(&goredis.Options{Addr: redisServer}),
-		time.Hour,
-	)
+	analyzerCacheClient := newAnalyzerCache(redisUtil.Client, time.Hour)
 
 	// Try to get cached results
 	cached, err := analyzerCacheClient.GetMatchingFiles(repo.Url)
@@ -132,6 +130,7 @@ func (repo *Repository) GetMatchingFiles() {
 		res, err = incrementalAnalysis(gitRepo, cached.CommitID, currentCommitID.Hash().String(), cached.Results)
 		if err != nil {
 			log.Errorf("could not run incremental analysis: %v", err)
+			return err
 		}
 
 	} else {
@@ -143,13 +142,14 @@ func (repo *Repository) GetMatchingFiles() {
 		// OUTPUT RESULT DATA TO STDOUT FOR NOW
 		fmt.Println(res)
 
-		return
+		return nil
 	}
 
 	// cache the new commit id and results
 	err = analyzerCacheClient.SetMatchingFiles(repo.Url, currentCommitID.Hash().String(), res)
 	if err != nil {
 		log.Errorf("could not cache results: %v", err)
+		return err
 	}
 	log.Infof("Cached results for repo %s: %+v", repo.Url, res)
 
@@ -157,18 +157,16 @@ func (repo *Repository) GetMatchingFiles() {
 	// WE MIGHT END UP USING REDIS JSON AS A OUTPUT FOMRAT AND ONLY STORE RESULT-IDS IN REDIS STREAMS
 
 	// Create a new analyzer redis json handler
-	// go-rejson/v4@v4.1.0 does not support redis/go-redis/v9 (but redis/go-redis/v8)
-	// have to create a new client for go-redis/v8 here
-	// use redigo conn for simplicity
-	analyzerHandler := NewAnalyzerJSONHandlerWithRedigoConn(redisServer)
-	defer (*analyzerHandler.conn).Close()
+	analyzerHandler := newAnalyzerJSONHandler(redisUtil.JSONHandler)
 
 	// Set the results in redis json
 	err = analyzerHandler.SetAnalyzerResult(repo, currentCommitID.Hash().String(), res)
 	if err != nil {
 		log.Errorf("could not set results in redis json: %v", err)
+		return err
 	}
 
+	return nil
 }
 
 func initialAnalysis(gitRepo *git.Repository) ([]*TechAndPath, error) {

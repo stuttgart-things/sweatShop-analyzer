@@ -33,7 +33,7 @@ type AnalyzerCache struct {
 	expiration time.Duration
 }
 
-func NewAnalyzerCache(client *goredis.Client, expiration time.Duration) *AnalyzerCache {
+func newAnalyzerCache(client *goredis.Client, expiration time.Duration) *AnalyzerCache {
 	return &AnalyzerCache{
 		client:     client,
 		cache:      gorediscache.New(&gorediscache.Options{Redis: client}),
