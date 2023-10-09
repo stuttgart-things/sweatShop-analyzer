@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/nitishm/go-rejson/v4"
@@ -10,12 +9,18 @@ import (
 
 // ErrJSONMissWithGoRedisClient has ideally the type RedisError of "github.com/redis/go-redis/v9/internal/proto"
 var ErrJSONMissWithGoRedisClient = "redis: nil"
-var ErrJSONMissWithRedigoConn = errors.New("redigo: nil returned")
+
+// var ErrJSONMissWithRedigoConn = errors.New("redigo: nil returned")
 
 type AnalyzerResultValue struct {
 	Repo    *Repository
 	Commit  string
 	Results []*TechAndPath
+}
+
+type AnalyzerJSONHandlerInterface interface {
+	SetAnalyzerResult(repo *Repository, commitId string, res []*TechAndPath) error
+	GetAnalyzerResult(repoURL string) (*AnalyzerResultValue, error)
 }
 
 type AnalyzerJSONHandler struct {
@@ -24,7 +29,7 @@ type AnalyzerJSONHandler struct {
 
 // attention: go-rejson/v4@v4.1.0 does not support redis/go-redis/v9 (but redis/go-redis/v8)
 // go-rejson/master does support redis/go-redis/v9
-func newAnalyzerJSONHandler(rh *rejson.Handler) *AnalyzerJSONHandler {
+func NewAnalyzerJSONHandler(rh *rejson.Handler) *AnalyzerJSONHandler {
 	return &AnalyzerJSONHandler{
 		handler: rh,
 	}

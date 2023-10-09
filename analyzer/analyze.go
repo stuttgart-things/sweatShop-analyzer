@@ -7,9 +7,6 @@ package analyzer
 import (
 	"fmt"
 	"path/filepath"
-	"time"
-
-	redisutil "github.com/stuttgart-things/sweatShop-analyzer/utils/redis"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
@@ -64,7 +61,7 @@ func (repo *Repository) ConnectRepository() error {
 	return nil
 }
 
-func (repo *Repository) GetMatchingFiles(redisUtil *redisutil.Redis) error {
+func (repo *Repository) GetMatchingFiles(ac AnalyzerCacheInterface, ajh AnalyzerJSONHandlerInterface) error {
 	log.Println("sweatShop-analyzer started")
 	log.Println("GetMatchingFiles for repo:", repo)
 
@@ -103,11 +100,8 @@ func (repo *Repository) GetMatchingFiles(redisUtil *redisutil.Redis) error {
 
 	log.Println(currentCommitID)
 
-	// Create a new analyzer cache client
-	analyzerCacheClient := newAnalyzerCache(redisUtil.Client, time.Hour)
-
 	// Try to get cached results
-	cached, err := analyzerCacheClient.GetMatchingFiles(repo.Url)
+	cached, err := ac.GetMatchingFiles(repo.Url)
 	if err != nil && err != ErrCacheMiss {
 		log.Warnf("could not get cached results: %v", err)
 	}
@@ -146,7 +140,7 @@ func (repo *Repository) GetMatchingFiles(redisUtil *redisutil.Redis) error {
 	}
 
 	// cache the new commit id and results
-	err = analyzerCacheClient.SetMatchingFiles(repo.Url, currentCommitID.Hash().String(), res)
+	err = ac.SetMatchingFiles(repo.Url, currentCommitID.Hash().String(), res)
 	if err != nil {
 		log.Errorf("could not cache results: %v", err)
 		return err
@@ -156,11 +150,8 @@ func (repo *Repository) GetMatchingFiles(redisUtil *redisutil.Redis) error {
 	// OUTPUT RESULT DATA TO STDOUT FOR NOW
 	// WE MIGHT END UP USING REDIS JSON AS A OUTPUT FOMRAT AND ONLY STORE RESULT-IDS IN REDIS STREAMS
 
-	// Create a new analyzer redis json handler
-	analyzerHandler := newAnalyzerJSONHandler(redisUtil.JSONHandler)
-
 	// Set the results in redis json
-	err = analyzerHandler.SetAnalyzerResult(repo, currentCommitID.Hash().String(), res)
+	err = ajh.SetAnalyzerResult(repo, currentCommitID.Hash().String(), res)
 	if err != nil {
 		log.Errorf("could not set results in redis json: %v", err)
 		return err

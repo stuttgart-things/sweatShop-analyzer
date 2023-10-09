@@ -18,7 +18,6 @@ vars:
   BRANCH:
     sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo -$(git rev-parse --abbrev-ref HEAD) ; fi
   REGISTRY: eu.gcr.io
-  REPOSITORY_NAME: stuttgart-things
 
 tasks:
   build:

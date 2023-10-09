@@ -4,15 +4,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_gitDiff(t *testing.T) {
 
-	// Create a new redis cache
-	redisUtil := initRedisUtilForTesting()
-	cache := newAnalyzerCache(redisUtil.Client,
-		30*time.Second, // when testing in debug mode, this may time out. Increase if needed.
+	redisClient, _ := redismock.NewClientMock()
+	cache := new(AnalyzerCacheMock)
+	cache.AnalyzerCache = *NewAnalyzerCache(
+		redisClient,
+		15*time.Second, // when testing in debug mode, this may time out. Increase if needed.
 	)
 
 	// Create a new repo
@@ -23,24 +25,28 @@ func Test_gitDiff(t *testing.T) {
 	}
 
 	gitRepo, _ := gitCloneRevision(repo)
-	currentCommitID, _ := gitRepo.Head()
+	firstCommitID, _ := gitRepo.Head()
 
 	// populate cache
-	err := cache.SetMatchingFiles(repo.Url, currentCommitID.Hash().String(), nil)
+	cache.MockedSetMatchingFiles = func(repoURL, commitId string, res []*TechAndPath) error {
+		return nil
+	}
+	err := cache.SetMatchingFiles(repo.Url, firstCommitID.Hash().String(), nil)
 	assert.NoError(t, err)
+	cache.MockedGetMatchingFiles = func(repoURL string) (*MatchingFilesValue, error) {
+		return &MatchingFilesValue{
+			CommitID: firstCommitID.Hash().String(),
+		}, nil
+	}
 
 	// change the revision
 	repo.Revision = "master"
 	gitRepo, _ = gitCloneRevision(repo)
-	currentCommitID, _ = gitRepo.Head()
+	secondCommitID, _ := gitRepo.Head()
 
 	cached, _ := cache.GetMatchingFiles(repo.Url)
 
-	diff, err := gitDiff(gitRepo, cached.CommitID, currentCommitID.Hash().String())
+	diff, err := gitDiff(gitRepo, cached.CommitID, secondCommitID.Hash().String())
 	assert.NoError(t, err)
 	assert.NotNil(t, diff)
-
-	// cleanup
-	err = cache.SetItem(analyzerResultKey(repo.Url), nil, time.Second, true)
-	assert.NoError(t, err)
 }

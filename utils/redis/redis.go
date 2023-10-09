@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/nitishm/go-rejson/v4"
@@ -11,7 +10,8 @@ import (
 
 // ErrJSONMissWithGoRedisClient has ideally the type RedisError of "github.com/redis/go-redis/v9/internal/proto"
 var ErrJSONMissWithGoRedisClient = "redis: nil"
-var ErrJSONMissWithRedigoConn = errors.New("redigo: nil returned")
+
+// var ErrJSONMissWithRedigoConn = errors.New("redigo: nil returned")
 
 type Redis struct {
 	Server      string

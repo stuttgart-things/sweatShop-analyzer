@@ -87,7 +87,13 @@ func processStreams(msg *redisqueue.Message) error {
 		return nil
 	}
 
-	return repo.GetMatchingFiles(redisUtil)
+	// Create a new analyzer cache client
+	ac := analyzer.NewAnalyzerCache(redisUtil.Client, time.Hour)
+
+	// Create a new analyzer redis json handler
+	ajh := analyzer.NewAnalyzerJSONHandler(redisUtil.JSONHandler)
+
+	return repo.GetMatchingFiles(ac, ajh)
 }
 
 func buildValidRepository(values map[string]interface{}) *analyzer.Repository {

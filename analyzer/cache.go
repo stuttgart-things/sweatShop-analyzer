@@ -27,13 +27,18 @@ type Item struct {
 	Expiration time.Duration
 }
 
+type AnalyzerCacheInterface interface {
+	GetMatchingFiles(repoURL string) (*MatchingFilesValue, error)
+	SetMatchingFiles(repoURL, commitId string, res []*TechAndPath) error
+}
+
 type AnalyzerCache struct {
 	client     *goredis.Client
 	cache      *gorediscache.Cache
 	expiration time.Duration
 }
 
-func newAnalyzerCache(client *goredis.Client, expiration time.Duration) *AnalyzerCache {
+func NewAnalyzerCache(client *goredis.Client, expiration time.Duration) *AnalyzerCache {
 	return &AnalyzerCache{
 		client:     client,
 		cache:      gorediscache.New(&gorediscache.Options{Redis: client}),
