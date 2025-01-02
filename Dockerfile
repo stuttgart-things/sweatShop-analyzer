@@ -1,4 +1,4 @@
-FROM golang:1.20 as builder
+FROM golang:1.23 as builder
 LABEL maintainer="Patrick Hermann patrick.hermann@sva.de"
 
 ARG GO_MODULE="github.com/stuttgart-things/sweatShop-analyzer"
